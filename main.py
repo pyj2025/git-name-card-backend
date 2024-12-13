@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import requests
-from bs4 import BeautifulSoup
 from fastapi.responses import Response
+from github_service import GitHubService
 
 app = FastAPI()
+github_service = GitHubService()
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,92 +20,24 @@ async def favicon():
 
 @app.get("/getName")
 async def get_name():
-    return {"name": "홍길동"}
+    return {"name": "Joon Park"}
 
 @app.get("/get_email/{github_id}")
 async def get_github_email(github_id: str):
-    try:
-        url = f"https://github.com/{github_id}"
-        response = requests.get(url)
-        if response.status_code == 404:
-            raise HTTPException(status_code=404, detail="GitHub profile not found")
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        email_element = soup.select_one('a[href^="mailto:"]')
-        
-        if email_element:
-            email = email_element['href'].replace('mailto:', '')
-            return {"email": email}
-        else:
-            return {"email": "Email not found"}
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await github_service.get_email(github_id)
 
 @app.get("/get_website/{github_id}")
 async def get_github_website(github_id: str):
-    try:
-        url = f"https://github.com/{github_id}"
-        response = requests.get(url)
-        if response.status_code == 404:
-            raise HTTPException(status_code=404, detail="GitHub profile not found")
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        website_element = soup.select_one('a[href^="http"]')
-        
-        if website_element:
-            website = website_element['href']
-            return {"website": website}
-        else:
-            return {"website": "Website not found"}
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await github_service.get_website(github_id)
 
 @app.get("/get_repos/{github_id}")
 async def get_repo_count(github_id: str):
-    try:
-        url = f"https://api.github.com/users/{github_id}"
-        response = requests.get(url)
-        if response.status_code == 404:
-            raise HTTPException(status_code=404, detail="GitHub profile not found")
-            
-        data = response.json()
-        return {"repos": data.get("public_repos", 0)}
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await github_service.get_repo_count(github_id)
 
 @app.get("/get_linkedin/{github_id}")
 async def get_linkedin(github_id: str):
-    try:
-        url = f"https://github.com/{github_id}"
-        response = requests.get(url)
-        if response.status_code == 404:
-            raise HTTPException(status_code=404, detail="GitHub profile not found")
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        linkedin_element = soup.select_one('a[href*="linkedin.com"]')
-        
-        if linkedin_element:
-            linkedin = linkedin_element['href']
-            return {"linkedin": linkedin}
-        else:
-            return {"linkedin": "LinkedIn profile not found"}
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await github_service.get_linkedin(github_id)
 
 @app.get("/get_followers/{github_id}")
 async def get_followers(github_id: str):
-    try:
-        url = f"https://api.github.com/users/{github_id}"
-        response = requests.get(url)
-        if response.status_code == 404:
-            raise HTTPException(status_code=404, detail="GitHub profile not found")
-            
-        data = response.json()
-        return {"followers": data.get("followers", 0)}
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await github_service.get_followers(github_id)
