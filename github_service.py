@@ -24,16 +24,39 @@ class GitHubService:
     async def get_email(self, github_id: str):
         try:
             soup = await self._get_github_page(github_id)
-            email_element = soup.select_one('a[href^="mailto:"]')
-            return {"email": email_element['href'].replace('mailto:', '') if email_element else "Email not found"}
+            email_element = soup.find('li', {
+                'itemprop': 'email'
+            })
+            
+            if email_element:
+                email_link = email_element.find('a', {'href': lambda x: x and x.startswith('mailto:')})
+                if email_link:
+                    return {"email": email_link.text.strip()}
+            return {"email": "Email not found"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
     async def get_website(self, github_id: str):
         try:
             soup = await self._get_github_page(github_id)
-            website_element = soup.select_one('a[href^="http"]')
-            return {"website": website_element['href'] if website_element else "Website not found"}
+            website_element = soup.find('li', {'itemprop': 'url'})
+            if website_element:
+                website_link = website_element.find('a', {'class': 'Link--primary'})
+                if website_link:
+                    return {"website": website_link.text.strip()}
+            return {"website": "Website not found"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_linkedin(self, github_id: str):
+        try:
+            soup = await self._get_github_page(github_id)
+            social_links = soup.find_all('a', {'class': 'Link--primary'})
+            for link in social_links:
+                href = link.get('href', '')
+                if 'linkedin.com' in href.lower():
+                    return {"linkedin": href}
+            return {"linkedin": "LinkedIn profile not found"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -44,17 +67,22 @@ class GitHubService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def get_linkedin(self, github_id: str):
-        try:
-            soup = await self._get_github_page(github_id)
-            linkedin_element = soup.select_one('a[href*="linkedin.com"]')
-            return {"linkedin": linkedin_element['href'] if linkedin_element else "LinkedIn profile not found"}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
     async def get_followers(self, github_id: str):
         try:
             data = await self._get_github_api(github_id)
             return {"followers": data.get("followers", 0)}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def get_name(self, github_id: str):
+        try:
+            soup = await self._get_github_page(github_id)
+            name_element = soup.find('span', {
+                'itemprop': 'name'
+            })
+            
+            if name_element:
+                return {"name": name_element.text.strip()}
+            return {"name": "Name not found"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) 

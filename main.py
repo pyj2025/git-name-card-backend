@@ -22,6 +22,10 @@ async def favicon():
 async def get_name():
     return {"name": "Joon Park"}
 
+@app.get("/get_name/{github_id}")
+async def get_name(github_id: str):
+    return await github_service.get_name(github_id)
+
 @app.get("/get_email/{github_id}")
 async def get_github_email(github_id: str):
     return await github_service.get_email(github_id)
