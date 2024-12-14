@@ -18,29 +18,13 @@ app.add_middleware(
 async def favicon():
     return Response(status_code=204)
 
-@app.get("/getName")
-async def get_name():
-    return {"name": "Joon Park"}
-
 @app.get("/get_name/{github_id}")
 async def get_name(github_id: str):
     return await github_service.get_name(github_id)
 
-@app.get("/get_email/{github_id}")
-async def get_github_email(github_id: str):
-    return await github_service.get_email(github_id)
-
-@app.get("/get_website/{github_id}")
-async def get_github_website(github_id: str):
-    return await github_service.get_website(github_id)
-
 @app.get("/get_repos/{github_id}")
 async def get_repo_count(github_id: str):
     return await github_service.get_repo_count(github_id)
-
-@app.get("/get_linkedin/{github_id}")
-async def get_linkedin(github_id: str):
-    return await github_service.get_linkedin(github_id)
 
 @app.get("/get_followers/{github_id}")
 async def get_followers(github_id: str):
